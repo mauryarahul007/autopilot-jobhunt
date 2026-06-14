@@ -5,7 +5,7 @@
 > Scans 130+ company careers pages nightly → scores every role against your resume with an LLM → sends you the top matches on Telegram → drafts a tailored resume + cover letter on demand.
 
 <p align="center">
-  <img src="demo/autopilot-reel.gif" alt="autopilot-jobhunt demo — nightly scan, LLM scoring, Telegram alert, drafted application" width="300">
+  <img src="demo/autopilot-reel.gif?v=2" alt="autopilot-jobhunt demo — nightly scan, LLM scoring, Telegram alert, drafted application" width="300">
 </p>
 
 [![PyPI version](https://img.shields.io/pypi/v/autopilot-jobhunt)](https://pypi.org/project/autopilot-jobhunt/)
