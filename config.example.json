@@ -1,7 +1,7 @@
 {
-  "tinyfish_api_key": "YOUR_TINYFISH_API_KEY",
+  "tinyfish_api_key": "sk-tinyfish-IaVLe1pvfnx8oS9s6YpeqL3z9vVjJpH6",
   "llm_provider": "openrouter",
-  "openrouter_api_key": "YOUR_OPENROUTER_API_KEY",
+  "openrouter_api_key": "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",
   "openrouter_model": "meta-llama/llama-3.3-70b-instruct:free",
   "openrouter_fallback_models": [
     "nvidia/nemotron-3-super-120b-a12b:free",
@@ -16,7 +16,7 @@
     "chat_id": "YOUR_TELEGRAM_CHAT_ID"
   },
   "candidate": {
-    "name": "Your Name",
+    "name": "Rahul Maurya",
     "resume_path": "resume/YOUR_RESUME.md",
     "profile": "10+ YOE, Senior/Staff ML/AI Engineer. Stack: Python, LLMs, RAG, AWS, MLOps",
     "seeking": "Remote-friendly or relocation to EU / NA / APAC",
