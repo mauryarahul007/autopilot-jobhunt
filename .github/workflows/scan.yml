@@ -30,6 +30,30 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
 
+    - name: Create config.json
+      run: |
+        echo '{
+          "tinyfish_api_key": "${{ secrets.TINYFISH_API_KEY }}",
+          "llm_provider": "openrouter",
+          "openrouter_api_key": "${{ secrets.OPENROUTER_API_KEY }}",
+          "openrouter_model": "meta-llama/llama-3.3-70b-instruct:free",
+          "openrouter_fallback_models": [
+            "nvidia/nemotron-3-super-120b-a12b:free",
+            "google/gemma-4-31b-it:free",
+            "qwen/qwen3-coder:free"
+          ],
+          "candidate": {
+            "name": "Rahul Maurya",
+            "resume_path": "resume/Rahul_Maurya_Resume.md",
+            "profile": "12+ YOE, Program Manager. Stack: Program & Project Management, Agile (Scrum/Kanban), Generative AI & Automation (LLMs, prompt engineering, workflow automation), Compliance (ISO 27001, SOC2), Data Analytics (SQL, Tableau, Power BI), AWS",
+            "seeking": "Program Manager, Technical Program Manager, Agile Coach, Scrum Master. Remote-friendly or relocation to EU / NA / APAC / Bengaluru",
+            "not_suitable": "Junior roles, entry-level, non-technical/non-IT roles, pure hands-on software development roles without project/program management responsibilities",
+            "relocation_note": "Currently located in Bengaluru, Karnataka, India. Open to remote, hybrid, or relocation.",
+            "min_score": 60,
+            "top_n": 5
+          }
+        }' > config.json
+
     - name: Run Job Scan
       env:
         TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
