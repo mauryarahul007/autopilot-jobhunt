@@ -144,5 +144,11 @@
   { "name": "EY Global", "careers_url": "https://www.ey.com/en_gl/careers", "search_domain": "eycareers.ey.com", "location": "Global / Relocation / Remote", "region": "EU" },
 
   { "name": "Grant Thornton India", "careers_url": "https://www.grantthornton.in/careers/", "search_domain": "grantthornton.in", "location": "India", "region": "IN" },
-  { "name": "Grant Thornton Global", "careers_url": "https://www.grantthornton.global/en/careers/", "search_domain": "grantthornton.global", "location": "Global / Relocation / Remote", "region": "EU" }
+  { "name": "Grant Thornton Global", "careers_url": "https://www.grantthornton.global/en/careers/", "search_domain": "grantthornton.global", "location": "Global / Relocation / Remote", "region": "EU" },
+  { "name": "Intuit", "careers_url": "https://www.intuit.com/careers/", "search_domain": "careers.intuit.com", "location": "Bengaluru, India", "region": "IN" },
+  { "name": "Noon", "careers_url": "https://www.noon.careers/", "search_domain": "noon.careers", "location": "Bengaluru, India", "region": "IN" },
+  { "name": "JTB India", "careers_url": "https://jtb-india.com/careers/", "search_domain": "jtb-india.com", "location": "Bengaluru, India", "region": "IN" },
+  { "name": "HighRadius", "careers_url": "https://www.highradius.com/careers/", "search_domain": "highradius.com", "location": "Hyderabad, India", "region": "IN" },
+  { "name": "Amazon India", "careers_url": "https://www.amazon.jobs/", "search_domain": "amazon.jobs", "location": "Bengaluru / Hyderabad, India", "region": "IN" },
+  { "name": "Sutherland", "careers_url": "https://www.sutherlandglobal.com/careers/", "search_domain": "sutherlandglobal.com", "location": "Bengaluru, India", "region": "IN" }
 ]
