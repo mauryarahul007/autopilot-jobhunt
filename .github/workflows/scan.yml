@@ -44,8 +44,6 @@ jobs:
           ],
           "gemini_api_key": "${{ secrets.GEMINI_API_KEY }}",
           "gemini_model": "gemini-1.5-flash",
-          "anthropic_api_key": "${{ secrets.ANTHROPIC_API_KEY }}",
-          "anthropic_model": "claude-haiku-4-5-20251001",
           "candidate": {
             "name": "Rahul Maurya",
             "resume_path": "resume/Rahul_Maurya_Resume.md",
@@ -63,7 +61,6 @@ jobs:
         TINYFISH_API_KEY: ${{ secrets.TINYFISH_API_KEY }}
         OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         CANDIDATE_NAME: "Rahul Maurya"
