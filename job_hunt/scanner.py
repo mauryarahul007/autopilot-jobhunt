@@ -487,6 +487,20 @@ def run_scan(config: dict, companies: list[dict]) -> None:
         sent = send_telegram(tg["token"], tg["chat_id"], msg)
         if sent:
             logger.info(f"Telegram notification sent. Results also saved to CSV: {csv_path}")
+            
+            # Automatically draft and send tailored resumes for the top N jobs
+            auto_draft_count = config.get("candidate", {}).get("auto_draft_top_n", 3)
+            if auto_draft_count > 0:
+                logger.info(f"Auto-drafting tailored resume/cover letter for the top {min(len(top_jobs), auto_draft_count)} matches...")
+                from job_hunt.drafter import draft_application
+                from job_hunt.telegram_bot import send_document
+                for idx, job in enumerate(top_jobs[:auto_draft_count], 1):
+                    try:
+                        out_dir = draft_application(config, f"#{idx}")
+                        for filepath in out_dir.glob("*"):
+                            send_document(tg["token"], tg["chat_id"], filepath, caption=f"Auto-Draft #{idx} - {filepath.name}")
+                    except Exception as draft_err:
+                        logger.error(f"Failed to auto-draft job #{idx}: {draft_err}")
         else:
             logger.warning(f"Telegram send failed — results saved to CSV: {csv_path}")
     else:

@@ -52,7 +52,8 @@ jobs:
             "not_suitable": "Junior roles, entry-level, non-technical/non-IT roles, pure hands-on software development roles without project/program management responsibilities",
             "relocation_note": "Currently located in Bengaluru, Karnataka, India. Open to remote, hybrid, or relocation.",
             "min_score": 60,
-            "top_n": 5
+            "top_n": 5,
+            "auto_draft_top_n": 3
           }
         }' > config.json
 
@@ -67,6 +68,7 @@ jobs:
         RESUME_PATH: "resume/Rahul_Maurya_Resume.md"
         MIN_SCORE: 60
         TOP_N: 5
+        AUTO_DRAFT_TOP_N: 3
       run: python -m job_hunt.main scan
 
     - name: Commit and push updated state and CSV results

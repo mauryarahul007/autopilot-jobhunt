@@ -25,6 +25,7 @@
     "not_suitable": "Junior roles, pure SWE with no ML, non-technical management",
     "relocation_note": "",
     "min_score": 60,
-    "top_n": 5
+    "top_n": 5,
+    "auto_draft_top_n": 3
   }
 }

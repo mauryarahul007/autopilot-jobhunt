@@ -91,7 +91,8 @@ def load_config() -> dict:
     cand_resume = os.getenv("RESUME_PATH")
     cand_min_score = os.getenv("MIN_SCORE")
     cand_top_n = os.getenv("TOP_N")
-    if cand_name or cand_resume or cand_min_score or cand_top_n:
+    cand_auto_draft = os.getenv("AUTO_DRAFT_TOP_N")
+    if cand_name or cand_resume or cand_min_score or cand_top_n or cand_auto_draft:
         if "candidate" not in config:
             config["candidate"] = {}
         if cand_name:
@@ -102,6 +103,8 @@ def load_config() -> dict:
             config["candidate"]["min_score"] = int(cand_min_score)
         if cand_top_n:
             config["candidate"]["top_n"] = int(cand_top_n)
+        if cand_auto_draft:
+            config["candidate"]["auto_draft_top_n"] = int(cand_auto_draft)
 
     return config
 
