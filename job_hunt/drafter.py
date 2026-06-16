@@ -136,3 +136,4 @@ JOB DESCRIPTION:
 
     logger.info(f"\nAll files in: {out_dir.resolve()}")
     logger.info("Review, edit, then submit manually.")
+    return out_dir

@@ -30,6 +30,7 @@ dev = ["pytest>=8.0", "ruff>=0.4"]
 
 [project.scripts]
 autopilot = "job_hunt.main:main"
+autopilot-bot = "job_hunt.telegram_bot:listen_telegram_bot"
 
 [project.urls]
 Homepage = "https://github.com/tarunlnmiit/autopilot-jobhunt"
