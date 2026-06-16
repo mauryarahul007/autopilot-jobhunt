@@ -166,13 +166,24 @@ def chat_with_llm(
     try:
         return chat_with_fallback(_make_openrouter_client(config), config, messages, temperature, max_tokens)
     except Exception as e:
+        # Fallback chain: OpenRouter -> Anthropic -> Gemini
+        anthropic_key = config.get("anthropic_api_key") or os.getenv("ANTHROPIC_API_KEY")
+        if anthropic_key and not _is_placeholder(anthropic_key):
+            logger.warning(f"Primary OpenRouter provider failed ({e}). Falling back to Anthropic...")
+            try:
+                return _chat_with_anthropic(config, messages, temperature, max_tokens)
+            except Exception as ant_err:
+                logger.error(f"Anthropic fallback failed: {ant_err}")
+                e = ant_err
+
         gemini_key = config.get("gemini_api_key") or os.getenv("GEMINI_API_KEY")
         if gemini_key and not _is_placeholder(gemini_key):
-            logger.warning(f"Primary OpenRouter provider failed ({e}). Falling back to Gemini...")
+            logger.warning(f"Falling back to Gemini...")
             try:
                 return _chat_with_gemini(config, messages, temperature, max_tokens)
             except Exception as gemini_err:
                 logger.error(f"Gemini fallback also failed: {gemini_err}")
+                e = gemini_err
         raise e
 
 
