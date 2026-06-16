@@ -37,9 +37,9 @@ ATS_LISTING_RE = re.compile(
 )
 
 SEARCH_QUERY = (
-    'site:{domain} (senior OR staff OR principal OR lead) '
-    '("data scientist" OR "ML engineer" OR "machine learning engineer" '
-    'OR "AI engineer" OR MLOps OR "deep learning")'
+    'site:{domain} (senior OR staff OR lead OR principal) '
+    '("project manager" OR "program manager" OR "TPM" OR "project lead" OR "program director") '
+    '(Bengaluru OR Bangalore OR Hyderabad OR India)'
 )
 
 SCORE_PROMPT = """You are evaluating job postings for a candidate. Output ONLY a JSON array, no other text.
@@ -425,6 +425,12 @@ def run_scan(config: dict, companies: list[dict]) -> None:
     for job in all_scored_jobs:
         job["scan_date"] = scan_date
 
+    # Sort all scored jobs by score descending so that indices align with top_jobs
+    all_scored_jobs = sorted(
+        all_scored_jobs,
+        key=lambda x: x.get("score", 0), reverse=True
+    )
+
     LAST_SCAN_FILE.parent.mkdir(exist_ok=True)
     LAST_SCAN_FILE.write_text(json.dumps(all_scored_jobs, indent=2))
     logger.debug(f"Last scan saved: {len(all_scored_jobs)} total jobs → {LAST_SCAN_FILE}")
@@ -450,8 +456,8 @@ def run_scan(config: dict, companies: list[dict]) -> None:
 
     if top_jobs:
         logger.info("Top matches:")
-        for j in top_jobs:
-            logger.info(f"  [{j.get('score', '?'):3}] {j.get('extracted_title') or j.get('title')} @ {j['company']} — {j.get('reason', '')[:80]}")
+        for idx, j in enumerate(top_jobs, 1):
+            logger.info(f"  #{idx} | [{j.get('score', '?'):3}] {j.get('extracted_title') or j.get('title')} @ {j['company']} — {j.get('reason', '')[:80]}")
 
     date_str = datetime.now().strftime("%d %b %Y")
     tg = config.get("telegram", {})
@@ -486,3 +492,18 @@ def run_scan(config: dict, companies: list[dict]) -> None:
     else:
         logger.info(f"Telegram not configured — results saved to CSV: {csv_path}")
         logger.info("Add telegram.token and telegram.chat_id to config.json to enable notifications.")
+
+    # Prompt user to tailor resume for top jobs if standard input is an interactive terminal
+    import sys
+    if sys.stdin.isatty() and top_jobs:
+        print("\n" + "=" * 50)
+        print("Would you like to draft a tailored resume and cover letter for any of these jobs?")
+        try:
+            choice = input("Enter job number (e.g. 1, 2) or press Enter to skip: ").strip()
+            if choice:
+                from job_hunt.drafter import draft_application
+                print(f"\nDrafting application and tailoring resume for job #{choice}...")
+                draft_application(config, f"#{choice}")
+        except (EOFError, KeyboardInterrupt):
+            pass
+        print("=" * 50)
