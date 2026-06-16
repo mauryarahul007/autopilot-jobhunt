@@ -23,6 +23,38 @@ def _make_openrouter_client(config: dict) -> OpenAI:
     )
 
 
+def _make_gemini_client(config: dict) -> OpenAI:
+    return OpenAI(
+        api_key=config.get("gemini_api_key") or os.getenv("GEMINI_API_KEY"),
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        timeout=_LLM_REQUEST_TIMEOUT,
+    )
+
+
+def _chat_with_gemini(config: dict, messages: list[dict], temperature: float, max_tokens: int) -> str:
+    model = config.get("gemini_model") or os.getenv("GEMINI_MODEL") or "gemini-1.5-flash"
+    logger.debug(f"LLM call → Gemini / {model}")
+    t0 = time.time()
+    client = _make_gemini_client(config)
+    resp = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+    elapsed = time.time() - t0
+    text = resp.choices[0].message.content or ""
+    usage = resp.usage
+    if usage:
+        logger.debug(
+            f"LLM response: {len(text)} chars in {elapsed:.1f}s "
+            f"(in={usage.prompt_tokens} out={usage.completion_tokens} tokens) via {model}"
+        )
+    else:
+        logger.debug(f"LLM response: {len(text)} chars in {elapsed:.1f}s via {model}")
+    return text
+
+
 def _chat_with_anthropic(config: dict, messages: list[dict], temperature: float, max_tokens: int) -> str:
     try:
         import anthropic
@@ -110,6 +142,13 @@ def _chat_with_claude_cli(config: dict, messages: list[dict], temperature: float
     return text
 
 
+def _is_placeholder(val: str | None) -> bool:
+    if not val:
+        return True
+    val_upper = val.upper()
+    return "YOUR_" in val_upper or "PLACEHOLDER" in val_upper or val_upper.endswith("_HERE") or val_upper.endswith("_KEY")
+
+
 def chat_with_llm(
     config: dict,
     messages: list[dict],
@@ -117,11 +156,24 @@ def chat_with_llm(
     max_tokens: int = 4096,
 ) -> str:
     provider = config.get("llm_provider")
+    if provider == "gemini":
+        return _chat_with_gemini(config, messages, temperature, max_tokens)
     if provider == "anthropic":
         return _chat_with_anthropic(config, messages, temperature, max_tokens)
     if provider == "claude_cli":
         return _chat_with_claude_cli(config, messages, temperature, max_tokens)
-    return chat_with_fallback(_make_openrouter_client(config), config, messages, temperature, max_tokens)
+
+    try:
+        return chat_with_fallback(_make_openrouter_client(config), config, messages, temperature, max_tokens)
+    except Exception as e:
+        gemini_key = config.get("gemini_api_key") or os.getenv("GEMINI_API_KEY")
+        if gemini_key and not _is_placeholder(gemini_key):
+            logger.warning(f"Primary OpenRouter provider failed ({e}). Falling back to Gemini...")
+            try:
+                return _chat_with_gemini(config, messages, temperature, max_tokens)
+            except Exception as gemini_err:
+                logger.error(f"Gemini fallback also failed: {gemini_err}")
+        raise e
 
 
 def chat_with_fallback(
