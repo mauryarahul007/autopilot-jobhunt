@@ -39,7 +39,7 @@ ATS_LISTING_RE = re.compile(
 SEARCH_QUERY = (
     'site:{domain} (senior OR staff OR lead OR principal) '
     '("project manager" OR "program manager" OR "TPM" OR "project lead" OR "program director") '
-    '(Bengaluru OR Bangalore OR Hyderabad OR India)'
+    '((Bengaluru OR Bangalore OR Hyderabad OR remote OR flexible OR hybrid) AND India)'
 )
 
 SCORE_PROMPT = """You are evaluating job postings for a candidate. Output ONLY a JSON array, no other text.
