@@ -335,7 +335,26 @@ def _export_to_csv(jobs: list[dict], label: str) -> Path:
 
 def run_scan(config: dict, companies: list[dict]) -> None:
     scan_start = time.time()
+    original_total = len(companies)
+    
+    # Filter companies to only those relevant to Bangalore, Hyderabad, Remote, or Relocation
+    filtered_companies = []
+    for company in companies:
+        loc = company.get("location", "").lower()
+        reg = company.get("region", "").lower()
+        is_relevant = (
+            reg in ("in", "remote", "global", "apac") or
+            any(keyword in loc for keyword in ("bengaluru", "bangalore", "hyderabad", "remote", "relocation", "visa"))
+        )
+        if is_relevant:
+            filtered_companies.append(company)
+            
+    companies = filtered_companies
     total = len(companies)
+    
+    if total < original_total:
+        logger.info(f"Filtered target companies: matching Bangalore, Hyderabad, Remote, or Relocation ({total}/{original_total} companies)")
+        
     logger.info(f"=== Scan started — {total} companies to check ===")
     logger.info(f"Candidate: {config.get('candidate', {}).get('name', 'unknown')}")
     logger.info(f"Min score: {config.get('candidate', {}).get('min_score', 55)} | Top N: {config.get('candidate', {}).get('top_n', 5)}")
