@@ -5,6 +5,7 @@ These functions contain zero MCP/OpenAI/Google dependencies.
 The MCP server, future OpenAI tool adapter, and future Gemini function adapter
 all import from here — one place to update, all adapters benefit.
 """
+from contextlib import chdir
 from pathlib import Path
 
 from job_hunt.drafter import draft_application
@@ -18,11 +19,7 @@ def tool_scan(config_path: str = "config.json", companies_path: str = "companies
     Returns a summary string.
     """
     import json
-    import os
-    old_cwd = Path.cwd()
-    project_root = Path(config_path).parent.resolve()
-    os.chdir(project_root)
-    try:
+    with chdir(Path(config_path).parent.resolve()):
         config = load_config()
         companies = load_companies()
         run_scan(config, companies)
@@ -32,8 +29,6 @@ def tool_scan(config_path: str = "config.json", companies_path: str = "companies
             scored = [j for j in jobs if j.get("score")]
             return f"Scan complete. {len(jobs)} jobs found, {len(scored)} scored."
         return "Scan complete. No results file written."
-    finally:
-        os.chdir(old_cwd)
 
 
 def tool_draft(job_ref: str, config_path: str = "config.json") -> str:
@@ -42,16 +37,10 @@ def tool_draft(job_ref: str, config_path: str = "config.json") -> str:
     job_ref: '#1', '1', or a full job URL.
     Returns path to output directory.
     """
-    import os
-    old_cwd = Path.cwd()
-    project_root = Path(config_path).parent.resolve()
-    os.chdir(project_root)
-    try:
+    with chdir(Path(config_path).parent.resolve()):
         config = load_config()
         draft_application(config, job_ref)
         return "Application drafted in output/ directory."
-    finally:
-        os.chdir(old_cwd)
 
 
 def tool_export(min_score: int = 0, days: int = 0, config_path: str = "config.json") -> str:
@@ -59,12 +48,6 @@ def tool_export(min_score: int = 0, days: int = 0, config_path: str = "config.js
     Export jobs to CSV.
     Returns path to exported CSV.
     """
-    import os
-    old_cwd = Path.cwd()
-    project_root = Path(config_path).parent.resolve()
-    os.chdir(project_root)
-    try:
+    with chdir(Path(config_path).parent.resolve()):
         export_jobs(min_score=min_score, days=days)
         return "Export complete. Check output/ directory."
-    finally:
-        os.chdir(old_cwd)

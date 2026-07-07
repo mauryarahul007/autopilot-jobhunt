@@ -19,15 +19,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-_PLACEHOLDERS = {
-    "YOUR_TINYFISH_API_KEY", "your_tinyfish_api_key_here",
-    "YOUR_OPENROUTER_API_KEY", "your_openrouter_api_key_here",
-    "YOUR_ANTHROPIC_API_KEY", "your_anthropic_api_key_here",
-}
-
-
-def _is_placeholder(val: str) -> bool:
-    return val in _PLACEHOLDERS or val.startswith("YOUR_") or val.endswith("_HERE") or val.endswith("_here")
+from job_hunt.llm_utils import is_placeholder
 
 
 def _use_env(val: str | None) -> bool:
@@ -37,7 +29,7 @@ def _use_env(val: str | None) -> bool:
     init` writes with `your_..._here` values) would clobber real keys in
     config.json — the classic "config.json and .env don't compose" bug.
     """
-    return bool(val) and not _is_placeholder(val)
+    return bool(val) and not is_placeholder(val)
 
 
 def load_config() -> dict:
@@ -70,7 +62,7 @@ def load_config() -> dict:
                 config[config_key] = val
 
     tinyfish_key = config.get("tinyfish_api_key", "")
-    if not tinyfish_key or _is_placeholder(tinyfish_key):
+    if not tinyfish_key or is_placeholder(tinyfish_key):
         sys.exit(
             "TINYFISH_API_KEY not set.\n"
             "Add it to your .env file: TINYFISH_API_KEY=sk-tinyfish-...\n"
@@ -223,7 +215,7 @@ def export_jobs(min_score: int = 0, days: int = 0) -> None:
         for j in filtered:
             writer.writerow(_job_to_row(j))
 
-    print(f"Exported {len(filtered)} jobs ({source_label}) → {out_path}")
+    print(f"Exported {len(filtered)} jobs ({source_label}) -> {out_path}")
     if min_score:
         print(f"Filter: score >= {min_score} (skipped {len(jobs) - len(filtered)})")
 

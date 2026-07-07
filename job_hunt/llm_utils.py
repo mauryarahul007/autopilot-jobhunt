@@ -15,27 +15,19 @@ logger = get_logger()
 _LLM_REQUEST_TIMEOUT = 120.0
 
 
-def _make_openrouter_client(config: dict) -> OpenAI:
+def _make_client(config: dict, env_key: str, base_url: str) -> OpenAI:
     return OpenAI(
-        api_key=config.get("openrouter_api_key") or os.getenv("OPENROUTER_API_KEY"),
-        base_url="https://openrouter.ai/api/v1",
-        timeout=_LLM_REQUEST_TIMEOUT,
-    )
-
-
-def _make_gemini_client(config: dict) -> OpenAI:
-    return OpenAI(
-        api_key=config.get("gemini_api_key") or os.getenv("GEMINI_API_KEY"),
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        api_key=config.get(env_key.lower()) or os.getenv(env_key),
+        base_url=base_url,
         timeout=_LLM_REQUEST_TIMEOUT,
     )
 
 
 def _chat_with_gemini(config: dict, messages: list[dict], temperature: float, max_tokens: int) -> str:
     model = config.get("gemini_model") or os.getenv("GEMINI_MODEL") or "gemini-1.5-flash"
-    logger.debug(f"LLM call → Gemini / {model}")
+    logger.debug(f"LLM call -> Gemini / {model}")
     t0 = time.time()
-    client = _make_gemini_client(config)
+    client = _make_client(config, "GEMINI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/openai/")
     resp = client.chat.completions.create(
         model=model,
         messages=messages,
@@ -62,7 +54,7 @@ def _chat_with_anthropic(config: dict, messages: list[dict], temperature: float,
         raise ImportError("Run: pip install 'autopilot-jobs[claude]'")
     api_key = config.get("anthropic_api_key") or os.getenv("ANTHROPIC_API_KEY")
     model = config.get("anthropic_model", "claude-haiku-4-5-20251001")
-    logger.debug(f"LLM call → Anthropic / {model}")
+    logger.debug(f"LLM call -> Anthropic / {model}")
     t0 = time.time()
     client = anthropic.Anthropic(api_key=api_key, timeout=_LLM_REQUEST_TIMEOUT)
     system = next((m["content"] for m in messages if m["role"] == "system"), None)
@@ -84,7 +76,7 @@ def _chat_with_anthropic(config: dict, messages: list[dict], temperature: float,
 
 def _chat_with_claude_cli(config: dict, messages: list[dict], temperature: float, max_tokens: int) -> str:
     model = config.get("claude_cli_model", "")
-    logger.debug(f"LLM call → Claude CLI{' / ' + model if model else ''}")
+    logger.debug(f"LLM call -> Claude CLI{' / ' + model if model else ''}")
     t0 = time.time()
 
     system = next((m["content"] for m in messages if m["role"] == "system"), None)
@@ -142,7 +134,7 @@ def _chat_with_claude_cli(config: dict, messages: list[dict], temperature: float
     return text
 
 
-def _is_placeholder(val: str | None) -> bool:
+def is_placeholder(val: str | None) -> bool:
     if not val:
         return True
     val_upper = val.upper()
@@ -164,10 +156,11 @@ def chat_with_llm(
         return _chat_with_claude_cli(config, messages, temperature, max_tokens)
 
     try:
-        return chat_with_fallback(_make_openrouter_client(config), config, messages, temperature, max_tokens)
+        llm = _make_client(config, "OPENROUTER_API_KEY", "https://openrouter.ai/api/v1")
+        return chat_with_fallback(llm, config, messages, temperature, max_tokens)
     except Exception as e:
         gemini_key = config.get("gemini_api_key") or os.getenv("GEMINI_API_KEY")
-        if gemini_key and not _is_placeholder(gemini_key):
+        if gemini_key and not is_placeholder(gemini_key):
             logger.warning(f"Primary OpenRouter provider failed ({e}). Falling back to Gemini...")
             try:
                 return _chat_with_gemini(config, messages, temperature, max_tokens)
@@ -192,7 +185,7 @@ def chat_with_fallback(
         label = f"[model {model_idx + 1}/{len(models)}] {model}"
         for attempt in range(2):
             try:
-                logger.debug(f"LLM call → {label} (attempt {attempt + 1})")
+                logger.debug(f"LLM call -> {label} (attempt {attempt + 1})")
                 t0 = time.time()
                 resp = llm.chat.completions.create(
                     model=model,

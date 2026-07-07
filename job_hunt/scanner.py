@@ -1,4 +1,3 @@
-import csv
 import json
 import re
 import time
@@ -68,10 +67,7 @@ Scoring: 80-100 near-perfect; 60-79 good fit; 40-59 partial; <40 poor.
 Set worth_applying=true only if score >= {min_score}.
 Include ALL jobs. Output ONLY the JSON array."""
 
-EXPORT_FIELDS = [
-    "Company", "Role", "Location", "Application URL",
-    "Score (%)", "Stack", "Region", "Reason", "Worth Applying", "Scan Date",
-]
+
 
 
 def _build_candidate_profile(config: dict) -> str:
@@ -303,34 +299,6 @@ def format_telegram_message(top_jobs: list[dict], date_str: str) -> str:
     return "\n".join(lines)
 
 
-def _export_to_csv(jobs: list[dict], label: str) -> Path:
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    out_path = Path("output") / f"jobs_{date_str}.csv"
-    out_path.parent.mkdir(exist_ok=True)
-
-    def _row(j: dict) -> dict:
-        worth = j.get("worth_applying")
-        return {
-            "Company": j.get("company", ""),
-            "Role": j.get("extracted_title") or j.get("title", ""),
-            "Location": j.get("location_remote") or j.get("location", ""),
-            "Application URL": j.get("url", ""),
-            "Score (%)": j.get("score", ""),
-            "Stack": j.get("stack", ""),
-            "Region": j.get("region", ""),
-            "Reason": j.get("reason", ""),
-            "Worth Applying": "Yes" if worth else ("No" if worth is False else ""),
-            "Scan Date": j.get("scan_date", ""),
-        }
-
-    with out_path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=EXPORT_FIELDS)
-        writer.writeheader()
-        for j in jobs:
-            writer.writerow(_row(j))
-
-    logger.info(f"Results exported to CSV ({label}): {out_path}")
-    return out_path
 
 
 def run_scan(config: dict, companies: list[dict]) -> None:
@@ -452,7 +420,7 @@ def run_scan(config: dict, companies: list[dict]) -> None:
 
     LAST_SCAN_FILE.parent.mkdir(exist_ok=True)
     LAST_SCAN_FILE.write_text(json.dumps(all_scored_jobs, indent=2))
-    logger.debug(f"Last scan saved: {len(all_scored_jobs)} total jobs → {LAST_SCAN_FILE}")
+    logger.debug(f"Last scan saved: {len(all_scored_jobs)} total jobs -> {LAST_SCAN_FILE}")
 
     history: list[dict] = []
     if JOB_HISTORY_FILE.exists():
@@ -482,9 +450,12 @@ def run_scan(config: dict, companies: list[dict]) -> None:
     tg = config.get("telegram", {})
     telegram_configured = bool(tg.get("token") and tg.get("chat_id"))
 
-    # Always persist results to CSV when there are scored jobs — this is the
-    # durable record regardless of whether Telegram is configured.
-    csv_path = _export_to_csv(all_scored_jobs, "scan results") if all_scored_jobs else None
+    if all_scored_jobs:
+        from job_hunt.main import export_jobs
+        export_jobs(min_score=0, days=0)
+        csv_path = Path("output") / f"jobs_{datetime.now().strftime('%Y-%m-%d')}.csv"
+    else:
+        csv_path = None
 
     if errors and telegram_configured:
         error_msg = f"<b>Job Hunt Errors — {date_str}</b>\n" + "\n".join(errors)
