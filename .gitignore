@@ -37,3 +37,7 @@ demo/*.mov
 
 # graphify knowledge graph
 graphify-out/
+
+# freellmapi source folder
+freellmapi/
+

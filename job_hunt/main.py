@@ -9,6 +9,8 @@ Usage:
   autopilot export --min 60   — export only jobs with score >= 60
   autopilot export --days 7   — export jobs from last 7 days (requires scan history)
   autopilot export --days 7 --min 60  — combine filters
+  autopilot dashboard         — start the web dashboard to review jobs & draft CVs
+  autopilot dashboard --port N — start dashboard on custom port N (default: 8000)
 """
 import csv
 import json
@@ -249,8 +251,19 @@ def main() -> None:
         from job_hunt.drafter import draft_application
         draft_application(config, sys.argv[2])
 
+    elif cmd == "dashboard":
+        port = 8000
+        if "--port" in sys.argv:
+            idx = sys.argv.index("--port")
+            try:
+                port = int(sys.argv[idx + 1])
+            except (IndexError, ValueError):
+                sys.exit("--port requires an integer, e.g. --port 8000")
+        from job_hunt.dashboard import start_server
+        start_server(port)
+
     else:
-        sys.exit(f"Unknown command: {cmd}\nUse: scan | draft | export")
+        sys.exit(f"Unknown command: {cmd}\nUse: scan | draft | export | dashboard")
 
 
 if __name__ == "__main__":

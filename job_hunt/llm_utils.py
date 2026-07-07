@@ -141,6 +141,37 @@ def is_placeholder(val: str | None) -> bool:
     return "YOUR_" in val_upper or "PLACEHOLDER" in val_upper or val_upper.endswith("_HERE") or val_upper.endswith("_KEY")
 
 
+def _chat_with_freellmapi(config: dict, messages: list[dict], temperature: float, max_tokens: int) -> str:
+    api_key = config.get("freellmapi_api_key") or os.getenv("FREELLMAPI_API_KEY")
+    if not api_key:
+        api_key = "freellmapi-3d8ceaab36ffe7555ee1d3fc705900f9b03ad69f6c2ca35b"
+    base_url = config.get("freellmapi_base_url") or os.getenv("FREELLMAPI_BASE_URL") or "http://localhost:3001/v1"
+    model = config.get("freellmapi_model") or os.getenv("FREELLMAPI_MODEL") or "gemini-1.5-flash"
+    
+    logger.debug(f"LLM call -> FreeLLMAPI / {model} @ {base_url}")
+    t0 = time.time()
+    client = _make_client(config, "FREELLMAPI_API_KEY", base_url)
+    # Ensure client uses correct API key if custom
+    client.api_key = api_key
+    resp = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens,
+    )
+    elapsed = time.time() - t0
+    text = resp.choices[0].message.content or ""
+    usage = resp.usage
+    if usage:
+        logger.debug(
+            f"LLM response: {len(text)} chars in {elapsed:.1f}s "
+            f"(in={usage.prompt_tokens} out={usage.completion_tokens} tokens) via FreeLLMAPI"
+        )
+    else:
+        logger.debug(f"LLM response: {len(text)} chars in {elapsed:.1f}s via FreeLLMAPI")
+    return text
+
+
 def chat_with_llm(
     config: dict,
     messages: list[dict],
@@ -149,7 +180,11 @@ def chat_with_llm(
 ) -> str:
     provider = config.get("llm_provider")
     if provider == "gemini":
-        return _chat_with_gemini(config, messages, temperature, max_tokens)
+        try:
+            return _chat_with_gemini(config, messages, temperature, max_tokens)
+        except Exception as e:
+            logger.warning(f"Gemini LLM call failed ({e}). Falling back to FreeLLMAPI...")
+            return _chat_with_freellmapi(config, messages, temperature, max_tokens)
     if provider == "anthropic":
         return _chat_with_anthropic(config, messages, temperature, max_tokens)
     if provider == "claude_cli":
@@ -165,9 +200,14 @@ def chat_with_llm(
             try:
                 return _chat_with_gemini(config, messages, temperature, max_tokens)
             except Exception as gemini_err:
-                logger.error(f"Gemini fallback also failed: {gemini_err}")
-                e = gemini_err
+                logger.warning(f"Gemini fallback also failed ({gemini_err}). Falling back to FreeLLMAPI...")
+                try:
+                    return _chat_with_freellmapi(config, messages, temperature, max_tokens)
+                except Exception as free_err:
+                    logger.error(f"FreeLLMAPI fallback also failed: {free_err}")
+                    e = free_err
         raise e
+
 
 
 def chat_with_fallback(
